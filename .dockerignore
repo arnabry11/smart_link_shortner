@@ -1,0 +1,50 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+
+# Logs
+log/*
+tmp/*
+
+# Runtime data
+storage/*
+
+# Dependency directories
+node_modules/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Kamal deployment
+.kamal/
+
+# Test coverage
+coverage/
+
+# CI/CD
+.github/
+
+# Local environment files
+.env.local
+.env.*.local
