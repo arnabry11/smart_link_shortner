@@ -69,4 +69,12 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+
+  # FactoryBot
+  config.include FactoryBot::Syntax::Methods
+
+  # Include flash support for request specs
+  config.before(:each, type: :request) do
+    ActionDispatch::Flash::FlashHash.new
+  end
 end

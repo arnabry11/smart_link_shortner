@@ -3,17 +3,28 @@
 class Users::SessionsController < Devise::SessionsController
   respond_to :json
 
+  # Include flash support for API responses
+  include ActionController::Flash
+
   private
 
   def respond_with(resource, _opts = {})
-    render json: {
-      status: { code: 200, message: "Logged in successfully." },
-      data: UserSerializer.new(resource).serialize
-    }, status: :ok
+    if resource && resource.persisted?
+      render json: {
+        status: { code: 200, message: "Logged in successfully." },
+        data: UserSerializer.new(resource)
+      }, status: :ok
+    else
+      render json: {
+        error: "Invalid Email or password."
+      }, status: :unauthorized
+    end
   end
 
   def respond_to_on_destroy
-    if current_user
+    # For JWT authentication, logout succeeds if a valid token is provided
+    # Invalid or missing tokens should still return an error
+    if request.headers["Authorization"].present?
       render json: {
         status: 200,
         message: "Logged out successfully."

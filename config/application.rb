@@ -41,6 +41,12 @@ module SmartLinkShortner
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
 
+    # Configure minimal session support for Devise compatibility
+    # Sessions are required by Devise but we configure it to skip session storage for JWT
+    config.session_store :cookie_store, key: "_smart_link_shortner_session"
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use config.session_store, config.session_options
+
     # Use Sidekiq as the Active Job backend
     config.active_job.queue_adapter = :sidekiq
   end

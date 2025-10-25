@@ -3,6 +3,9 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   respond_to :json
 
+  # Include flash support for API responses
+  include ActionController::Flash
+
   # before_action :configure_sign_up_params, only: [:create]
   # before_action :configure_account_update_params, only: [:update]
 
@@ -37,7 +40,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if request.method == "POST" && resource.persisted?
       render json: {
         status: { code: 200, message: "Signed up successfully." },
-        data: UserSerializer.new(resource).serialize
+        data: UserSerializer.new(resource)
       }, status: :ok
     elsif request.method == "DELETE"
       render json: {
