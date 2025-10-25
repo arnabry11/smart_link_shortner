@@ -9,7 +9,7 @@ gem "puma", ">= 5.0"
 # Use Redis adapter to run Action Cable in production
 gem "redis", ">= 4.0.1"
 # Use Sidekiq as the Active Job backend
-gem "sidekiq", "~> 7.0"
+gem "sidekiq", "~> 8.0"
 # Load environment variables from .env files
 gem "dotenv-rails"
 gem "strong_migrations"
