@@ -16,6 +16,10 @@ Rails.application.routes.draw do
     end
   end
 
+  # Swagger documentation
+  get "/api-docs" => "swagger#index"
+  get "/api-docs.json" => "swagger#index", defaults: { format: :json }
+
   # Defines the root path route ("/")
   # root "posts#index"
 end

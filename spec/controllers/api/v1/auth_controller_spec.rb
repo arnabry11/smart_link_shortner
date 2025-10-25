@@ -129,16 +129,17 @@ RSpec.describe Api::V1::AuthController, type: :controller do
 
   describe 'DELETE #logout' do
     let(:user) { create(:user) }
+    let(:token) { Warden::JWTAuth::UserEncoder.new.call(user, :default, nil).first }
 
     context 'with authenticated user' do
       before do
-        # Mock warden authentication by setting request environment
-        request.env['warden'] = double(user: user)
+        request.headers['Authorization'] = "Bearer #{token}"
       end
 
       it 'revokes user tokens' do
         expect {
           delete :logout
+          user.reload
         }.to change(user, :token_version).from(1).to(2)
       end
 
@@ -152,16 +153,22 @@ RSpec.describe Api::V1::AuthController, type: :controller do
     end
 
     context 'without authenticated user' do
-      before do
-        request.env['warden'] = double(user: nil)
-      end
-
-      it 'returns unauthorized' do
+      it 'returns unauthorized when no token provided' do
         delete :logout
 
         expect(response).to have_http_status(:unauthorized)
         json_response = JSON.parse(response.body)
-        expect(json_response['error']).to eq('Not authenticated')
+        expect(json_response['error']).to eq('Missing authorization token')
+      end
+
+      it 'returns unauthorized when invalid token provided' do
+        request.headers['Authorization'] = "Bearer invalid-token"
+
+        delete :logout
+
+        expect(response).to have_http_status(:unauthorized)
+        json_response = JSON.parse(response.body)
+        expect(json_response['error']).to eq('Token revoked')
       end
     end
   end
