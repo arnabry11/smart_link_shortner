@@ -1,0 +1,38 @@
+# See https://pre-commit.com for more information
+# See https://github.com/pre-commit/pre-commit-hooks for more hooks
+# See https://github.com/mattlqx/pre-commit-ruby for Ruby-specific hooks
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false
+
+repos:
+  # Standard hooks from pre-commit-hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim trailing whitespace
+        description: Trims trailing whitespace
+      - id: end-of-file-fixer
+        name: Fix end of files
+        description: Makes sure files end in a newline and only a newline
+
+  # Ruby-specific hooks
+  - repo: https://github.com/mattlqx/pre-commit-ruby
+    rev: v1.3.6
+    hooks:
+      - id: rubocop
+        name: Run RuboCop
+        description: Run RuboCop linter
+      - id: rspec
+        name: Run RSpec
+        description: Run RSpec tests
+

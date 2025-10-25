@@ -1,0 +1,133 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+
+HOOKS_DIR = File.expand_path("../hooks", __dir__)
+GIT_HOOKS_DIR = File.expand_path("../.git/hooks", __dir__)
+
+def setup_hooks
+  puts "Setting up Git hooks..."
+
+  unless Dir.exist?(GIT_HOOKS_DIR)
+    puts "❌ Error: .git/hooks directory not found."
+    puts "Are you in a git repository?"
+    exit 1
+  end
+
+  # Find pre-commit executable
+  pre_commit_cmd = nil
+
+  # Check common locations
+  [
+    "pre-commit",  # In PATH
+    "#{ENV['HOME']}/Library/Python/3.9/bin/pre-commit",  # macOS user install
+    "#{ENV['HOME']}/.local/bin/pre-commit",  # Linux user install
+    "/usr/local/bin/pre-commit",  # Homebrew
+    "#{ENV['HOME']}/miniconda3/bin/pre-commit",  # conda
+    "#{ENV['HOME']}/anaconda3/bin/pre-commit",  # anaconda
+  ].each do |path|
+    if system("command -v #{path} >/dev/null 2>&1")
+      pre_commit_cmd = path
+      break
+    end
+  end
+
+  if pre_commit_cmd.nil?
+    puts "📦 Installing pre-commit..."
+
+    # Try different installation methods
+    installed = false
+
+    # Try pip first
+    if system("pip install --user pre-commit 2>/dev/null")
+      installed = true
+      pre_commit_cmd = "#{ENV['HOME']}/Library/Python/3.9/bin/pre-commit"
+    # Try pip3
+    elsif system("pip3 install --user pre-commit 2>/dev/null")
+      installed = true
+      pre_commit_cmd = "#{ENV['HOME']}/Library/Python/3.9/bin/pre-commit"
+    # Try brew on macOS
+    elsif system("which brew >/dev/null 2>&1 && brew install pre-commit")
+      installed = true
+      pre_commit_cmd = "/usr/local/bin/pre-commit"
+    end
+
+    unless installed
+      puts "❌ Failed to install pre-commit automatically."
+      puts "Please install it manually using one of these methods:"
+      puts "  - pip install pre-commit"
+      puts "  - pip3 install pre-commit"
+      puts "  - brew install pre-commit (macOS)"
+      puts "  - conda install -c conda-forge pre-commit (Conda)"
+      puts ""
+      puts "After installing, re-run this script."
+      exit 1
+    end
+
+    puts "✅ pre-commit installed successfully"
+  else
+    puts "✅ pre-commit is already available"
+  end
+
+  # Create symlink for pre-commit config
+  config_source = File.join(HOOKS_DIR, 'pre-commit-config.yaml')
+  config_target = File.join(Dir.pwd, '.pre-commit-config.yaml')
+
+  if File.exist?(config_source)
+    # Remove existing symlink or file if it exists
+    File.unlink(config_target) if File.exist?(config_target) || File.symlink?(config_target)
+
+    # Create symlink
+    File.symlink(config_source, config_target)
+    puts "✅ Created symlink for pre-commit config"
+  else
+    puts "❌ Pre-commit config not found at #{config_source}"
+    exit 1
+  end
+
+  # Install pre-commit hooks
+  puts "🔗 Installing pre-commit hooks..."
+  unless system("#{pre_commit_cmd} install")
+    puts "❌ Failed to install pre-commit hooks."
+    puts "You can install them manually with: #{pre_commit_cmd} install"
+    exit 1
+  end
+
+  # Install pre-push hooks (our custom ones)
+  if Dir.exist?(HOOKS_DIR)
+    Dir.glob("#{HOOKS_DIR}/*").each do |hook_template|
+      next unless File.file?(hook_template)
+
+      hook_name = File.basename(hook_template)
+      hook_target = File.join(GIT_HOOKS_DIR, hook_name)
+
+      # Copy the hook
+      FileUtils.cp(hook_template, hook_target)
+
+      # Make it executable
+      FileUtils.chmod(0755, hook_target)
+
+      puts "✅ Installed #{hook_name} hook"
+    end
+  end
+
+  puts "🎉 Git hooks setup complete!"
+  puts "The following hooks are now active:"
+  puts "  - Pre-commit hooks (via pre-commit framework):"
+  puts "    - trailing-whitespace"
+  puts "    - end-of-file-fixer"
+  puts "    - rubocop"
+  puts "    - rspec"
+  puts "  - Custom hooks:"
+  if Dir.exist?(HOOKS_DIR)
+    Dir.glob("#{HOOKS_DIR}/*").each do |hook|
+      hook_name = File.basename(hook)
+      next if hook_name == 'pre-commit-config.yaml' # Skip the config file
+      puts "    - #{hook_name}"
+    end
+  end
+end
+
+if __FILE__ == $0
+  setup_hooks
+end

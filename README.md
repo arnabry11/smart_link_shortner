@@ -24,12 +24,29 @@ Developers should use standard Rails commands for development. This gives you fu
    rails db:migrate
    ```
 
-4. **Start the server:**
+4. **Setup Git hooks (recommended):**
+   ```bash
+   ./bin/setup-hooks
+   ```
+   This installs quality assurance hooks that automatically run:
+
+   **Pre-commit hooks (via [pre-commit](https://pre-commit.com)):**
+   - **trailing-whitespace** - Removes trailing whitespace from lines
+   - **end-of-file-fixer** - Ensures files end with exactly one newline
+   - **rubocop** - Runs RuboCop code quality checks
+   - **rspec** - Runs RSpec tests on changed files
+
+   **Pre-push hooks:**
+   - **Brakeman** - Security vulnerability scanner
+   - **RuboCop** - Full RuboCop analysis (all files)
+   - **RSpec** - Full test suite
+
+5. **Start the server:**
    ```bash
    rails server
    ```
 
-5. **Common development commands:**
+6. **Common development commands:**
    ```bash
    rails console          # Start Rails console
    rails db:migrate       # Run migrations
@@ -148,6 +165,11 @@ bundle exec brakeman
 
 # Run all checks
 bundle exec rails_best_practices
+
+# Pre-commit hooks (formatting and style)
+pre-commit run --all-files  # Run all hooks on all files
+pre-commit run trailing-whitespace --all-files  # Run specific hook
+pre-commit run rubocop --all-files  # Run RuboCop on all files
 ```
 
 ## Deployment
@@ -171,3 +193,5 @@ Key variables:
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection string
 - `FRONTEND_URL` - Frontend URL for password reset links
+
+# Test comment
