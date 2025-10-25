@@ -8,37 +8,87 @@ GIT_HOOKS_DIR = File.expand_path("../.git/hooks", __dir__)
 def setup_hooks
   puts "Setting up Git hooks..."
 
-  unless Dir.exist?(HOOKS_DIR)
-    puts "❌ Error: hooks directory not found at #{HOOKS_DIR}"
-    puts "Please run this script from the project root."
-    exit 1
-  end
-
   unless Dir.exist?(GIT_HOOKS_DIR)
     puts "❌ Error: .git/hooks directory not found."
     puts "Are you in a git repository?"
     exit 1
   end
 
-  Dir.glob("#{HOOKS_DIR}/*").each do |hook_template|
-    next unless File.file?(hook_template)
+  # Check if pre-commit is installed
+  pre_commit_available = system("command -v pre-commit >/dev/null 2>&1")
 
-    hook_name = File.basename(hook_template)
-    hook_target = File.join(GIT_HOOKS_DIR, hook_name)
+  if pre_commit_available
+    puts "✅ pre-commit is already installed"
+  else
+    puts "📦 Installing pre-commit..."
 
-    # Copy the hook
-    FileUtils.cp(hook_template, hook_target)
+    # Try different installation methods
+    installed = false
 
-    # Make it executable
-    FileUtils.chmod(0755, hook_target)
+    # Try pip first
+    if system("pip install pre-commit 2>/dev/null")
+      installed = true
+    # Try pip3
+    elsif system("pip3 install pre-commit 2>/dev/null")
+      installed = true
+    # Try brew on macOS
+    elsif system("which brew >/dev/null 2>&1 && brew install pre-commit")
+      installed = true
+    end
 
-    puts "✅ Installed #{hook_name} hook"
+    unless installed
+      puts "❌ Failed to install pre-commit automatically."
+      puts "Please install it manually using one of these methods:"
+      puts "  - pip install pre-commit"
+      puts "  - pip3 install pre-commit"
+      puts "  - brew install pre-commit (macOS)"
+      puts "  - conda install -c conda-forge pre-commit (Conda)"
+      puts ""
+      puts "After installing, re-run this script."
+      exit 1
+    end
+
+    puts "✅ pre-commit installed successfully"
+  end
+
+  # Install pre-commit hooks
+  puts "🔗 Installing pre-commit hooks..."
+  unless system("pre-commit install")
+    puts "❌ Failed to install pre-commit hooks."
+    puts "You can install them manually with: pre-commit install"
+    exit 1
+  end
+
+  # Install pre-push hooks (our custom ones)
+  if Dir.exist?(HOOKS_DIR)
+    Dir.glob("#{HOOKS_DIR}/*").each do |hook_template|
+      next unless File.file?(hook_template)
+
+      hook_name = File.basename(hook_template)
+      hook_target = File.join(GIT_HOOKS_DIR, hook_name)
+
+      # Copy the hook
+      FileUtils.cp(hook_template, hook_target)
+
+      # Make it executable
+      FileUtils.chmod(0755, hook_target)
+
+      puts "✅ Installed #{hook_name} hook"
+    end
   end
 
   puts "🎉 Git hooks setup complete!"
   puts "The following hooks are now active:"
-  Dir.glob("#{HOOKS_DIR}/*").each do |hook|
-    puts "  - #{File.basename(hook)}"
+  puts "  - Pre-commit hooks (via pre-commit framework):"
+  puts "    - trailing-whitespace"
+  puts "    - end-of-file-fixer"
+  puts "    - rubocop"
+  puts "    - rspec"
+  puts "  - Custom hooks:"
+  if Dir.exist?(HOOKS_DIR)
+    Dir.glob("#{HOOKS_DIR}/*").each do |hook|
+      puts "    - #{File.basename(hook)}"
+    end
   end
 end
 
