@@ -10,6 +10,8 @@ end
 
 RSpec.describe Authenticable, type: :controller do
   controller TestAuthenticableController do
+    before_action :authenticate_user!
+
     def index
       render json: { user_id: current_user.id }
     end

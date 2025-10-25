@@ -1,9 +1,11 @@
 module Api
   module V1
     class AuthController < ApplicationController
+      before_action :authenticate_user!, only: [ :logout ]
+
       # POST /api/v1/auth/register
       def register
-        user = User.new(user_params)
+        user = User.new(register_params)
         if user.save
           token = Warden::JWTAuth::UserEncoder.new.call(user, :default, nil).first
           render json: {
@@ -41,14 +43,8 @@ module Api
 
       # DELETE /api/v1/auth/logout
       def logout
-        # Revoke all tokens for this user by incrementing token version
-        current_user = request.env["warden"]&.user
-        if current_user
-          current_user.revoke_all_tokens!
-          render json: { message: "Logged out successfully" }, status: :ok
-        else
-          render json: { error: "Not authenticated" }, status: :unauthorized
-        end
+        current_user.revoke_all_tokens!
+        render json: { message: "Logged out successfully" }, status: :ok
       end
 
       # POST /api/v1/auth/forgot_password
@@ -81,7 +77,7 @@ module Api
 
       private
 
-      def user_params
+      def register_params
         params.require(:user).permit(:email, :password, :first_name, :last_name)
       end
     end
