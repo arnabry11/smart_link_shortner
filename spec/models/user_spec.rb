@@ -1,3 +1,25 @@
+# == Schema Information
+#
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  created_at             :datetime         not null
+#  email                  :string
+#  first_name             :string
+#  last_name              :string
+#  password_digest        :string
+#  reset_password_sent_at :datetime
+#  reset_password_token   :string
+#  token_version          :integer          default(1), not null
+#  updated_at             :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email                 (email) UNIQUE
+#  index_users_on_reset_password_token  (reset_password_token) UNIQUE
+#  index_users_on_token_version         (token_version)
+#
+
 require 'rails_helper'
 
 RSpec.describe User do
