@@ -194,3 +194,4 @@ Key variables:
 - `REDIS_URL` - Redis connection string
 - `FRONTEND_URL` - Frontend URL for password reset links
 
+# Test comment
