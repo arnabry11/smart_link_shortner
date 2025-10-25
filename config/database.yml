@@ -18,7 +18,10 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-
+  host: <%= ENV.fetch("DB_HOST") { "localhost" } %>
+  username: <%= ENV.fetch("DB_USER") { "postgres" } %>
+  password: <%= ENV.fetch("DB_PASS") { "password" } %>
+  port: <%= ENV.fetch("DB_PORT") { 5432 } %>
 
 development:
   <<: *default
@@ -57,10 +60,6 @@ development:
 test:
   <<: *default
   database: smart_link_shortner_test
-  host: db
-  username: postgres
-  password: password
-  port: 6003
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
 # ever seen by anyone, they now have access to your database.

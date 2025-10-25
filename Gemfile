@@ -15,7 +15,10 @@ gem "dotenv-rails"
 gem "strong_migrations"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
-# gem "bcrypt", "~> 3.1.7"
+gem "bcrypt", "~> 3.1.7"
+
+# JWT Authentication with Warden
+gem "warden-jwt_auth", "~> 0.6.0"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]
@@ -74,12 +77,14 @@ end
 
 group :test do
   gem "database_cleaner-active_record"
+  gem "rails-controller-testing"
 
   gem "codecov"
   gem "simplecov"
   gem "simplecov-cobertura"
   gem "simplecov-console"
   gem "vcr"
+  gem "webmock"
   gem "test-prof"
   gem "timecop"
 end
