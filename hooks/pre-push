@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# Pre-push hook to run security checks, code quality checks, and tests
+# This hook is called with the following parameters:
+#
+# $1 -- Name of the remote to which the push is being done
+# $2 -- URL to which the push is being done
+#
+# Information about the commits which are being pushed is supplied as lines to
+# the standard input in the form:
+#
+#   <local ref> <local oid> <remote ref> <remote oid>
+
+remote="$1"
+url="$2"
+
+echo "Running pre-push hooks..."
+
+# Function to run a command and check its exit status
+run_check() {
+    local cmd="$1"
+    local name="$2"
+
+    echo "Running $name..."
+    if eval "$cmd"; then
+        echo "✓ $name passed"
+        return 0
+    else
+        echo "✗ $name failed"
+        return 1
+    fi
+}
+
+# Run Brakeman security scanner
+if ! run_check "bin/brakeman" "Brakeman"; then
+    echo "Security vulnerabilities found. Please fix them before pushing."
+    exit 1
+fi
+
+# Run RuboCop code style checker
+if ! run_check "bin/rubocop" "RuboCop"; then
+    echo "Code style issues found. Please fix them before pushing."
+    exit 1
+fi
+
+# Run RSpec tests
+if ! run_check "bundle exec rake spec" "RSpec"; then
+    echo "Tests are failing. Please fix them before pushing."
+    exit 1
+fi
+
+echo "All checks passed! Proceeding with push..."
+exit 0

@@ -1,0 +1,114 @@
+#!/bin/sh
+
+# Pre-commit hook to clean up whitespace and newlines
+# This hook is called before committing changes.
+# It ensures files have no trailing whitespace and proper newline endings.
+
+echo "Running pre-commit formatting checks..."
+
+# Get list of staged files (excluding deleted files)
+staged_files=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$staged_files" ]; then
+    echo "No files staged for commit. Skipping formatting checks."
+    exit 0
+fi
+
+# Function to fix formatting for a single file
+fix_file() {
+    local file="$1"
+
+    # Skip binary files and files we don't want to modify
+    if [ ! -f "$file" ] || [ ! -s "$file" ]; then
+        return 0
+    fi
+
+    # Skip certain file types that shouldn't be modified
+    case "$file" in
+        *.png|*.jpg|*.jpeg|*.gif|*.ico|*.pdf|*.zip|*.tar|*.gz|*.bz2|*.xz|*.patch|*.diff)
+            echo "  Skipping binary/media file: $file"
+            return 0
+            ;;
+    esac
+
+    # Additional check for binary files using file command if available
+    if command -v file >/dev/null 2>&1; then
+        if file "$file" | grep -q "binary\|executable\|compressed"; then
+            echo "  Skipping binary file: $file"
+            return 0
+        fi
+    fi
+
+    local changed=false
+
+    # Remove trailing whitespace from all lines
+    if sed -i 's/[[:space:]]*$//' "$file"; then
+        changed=true
+    fi
+
+    # Remove trailing empty lines and ensure file ends with exactly one newline
+    # This uses awk to process the file
+    if awk '
+        BEGIN { last_non_empty = 0 }
+        /^[[:space:]]*$/ {
+            if (last_non_empty == 0) {
+                # Skip leading empty lines
+                next
+            } else {
+                # Count trailing empty lines
+                empty_count++
+                next
+            }
+        }
+        {
+            # Non-empty line found
+            last_non_empty = 1
+            # Print any accumulated empty lines (but not trailing ones)
+            for (i = 0; i < empty_count && last_non_empty > 0; i++) {
+                print ""
+            }
+            empty_count = 0
+            print
+        }
+        END {
+            # Ensure file ends with exactly one newline
+            print ""
+        }
+    ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"; then
+        changed=true
+    fi
+
+    if [ "$changed" = true ]; then
+        echo "  Fixed formatting in: $file"
+        # Re-stage the file since we modified it
+        git add "$file"
+    fi
+}
+
+# Process each staged file
+files_processed=0
+files_fixed=0
+
+for file in $staged_files; do
+    if [ -f "$file" ]; then
+        files_processed=$((files_processed + 1))
+        if fix_file "$file"; then
+            # Check if the file was actually modified by comparing git status
+            if git diff --quiet "$file"; then
+                : # File was not modified
+            else
+                files_fixed=$((files_fixed + 1))
+            fi
+        fi
+    fi
+done
+
+if [ $files_fixed -gt 0 ]; then
+    echo "✅ Fixed formatting in $files_fixed file(s)"
+    echo "Files have been re-staged with formatting fixes."
+else
+    echo "✅ All staged files are properly formatted"
+fi
+
+echo "Pre-commit formatting checks complete!"
+exit 0

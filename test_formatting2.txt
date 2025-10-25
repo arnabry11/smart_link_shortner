@@ -1,8 +1,0 @@
-This is a longer test file with trailing spaces at the end of this line   
-
-This is another line with trailing spaces   
-
-
-
-
-

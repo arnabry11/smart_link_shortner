@@ -1,6 +1,0 @@
-line with trailing spaces   
-
-another line  
-
-
-
